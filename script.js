@@ -1,3 +1,8 @@
+// note is gonna be used to access the html elements
+// key is gonna be used for triggering the sounds
+// frequency is gonna be used to generate sounds
+// active is to let us know which notes are being played
+// you can generate sounds by pressing the following keys in the array
 const NOTE_DETAILS = [
   { note: "C", key: "Z", frequency: 261.626, active: false },
   { note: "Db", key: "S", frequency: 277.183, active: false },
@@ -14,6 +19,7 @@ const NOTE_DETAILS = [
 ];
 const audioContext = new AudioContext();
 
+// Generate sound on keydown
 document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   const keyBoardKey = e.key;
@@ -23,6 +29,7 @@ document.addEventListener("keydown", (e) => {
   playNotes();
 });
 
+// Stop sound on keyUp
 document.addEventListener("keyup", (e) => {
   const keyBoardKey = e.key;
   const noteDetail = getNoteDetail(keyBoardKey);
@@ -31,6 +38,7 @@ document.addEventListener("keyup", (e) => {
   playNotes();
 });
 
+// Get the notes that are being played
 function getNoteDetail(key) {
   return NOTE_DETAILS.find((n) => n.key.toLowerCase() === key);
 }
@@ -39,13 +47,20 @@ function playNotes() {
   NOTE_DETAILS.forEach((node) => {
     const keyDiv = document.querySelector(`[data-note=${node.note}]`);
     keyDiv.classList.toggle("active", node.active);
+    // removing active notes after keyup was triggered
     if (node.oscillator) {
       const oscillator = node.oscillator;
       oscillator.stop();
       oscillator.disconnect();
     }
   });
+
   const activeNotes = NOTE_DETAILS.filter((n) => n.active);
+
+  // each note plays at 100% volume so if to notes play at the same time
+  // we get 200% and we don't want that therefore we are decreasing the volume
+  // by 1 divided by the amount of nodes that are currently active
+  // so we can be sure that we get a total 100% volume at all time
   const gain = 1 / activeNotes.length;
   makeSound(activeNotes, gain);
 }
@@ -55,21 +70,10 @@ function makeSound(activeNotes, gain) {
     const gainNode = audioContext.createGain();
     gainNode.gain.value = gain;
     const oscillator = audioContext.createOscillator();
-    oscillator.type = "triangle";
+    oscillator.type = "triangle"; // "square" "sawtooth" "sine"
     oscillator.frequency.value = n.frequency;
     oscillator.connect(gainNode).connect(audioContext.destination);
     oscillator.start();
     n.oscillator = oscillator;
   });
 }
-
-// creates sounds using frequencies
-const audioContext = new AudioContext();
-const oscillator = audioContext.createOscillator();
-oscillator.type = "triangle"; // "square" "sine" "sawtooth"
-oscillator.frequency.value = frequency; // 440 is default (try different frequencies)
-oscillator.connect(audioContext.destination); // connects to your audio output
-oscillator.start(0); // immediately starts when triggered
-oscillator.stop(0.5); // stops after 0.5 seconds
-
-> Blockquote
